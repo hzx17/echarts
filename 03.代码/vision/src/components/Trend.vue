@@ -146,7 +146,7 @@ export default {
       const adapterOption = {
         legend: {
           itemWidth: this.titleFontSize,
-          itenHeight: this.titleFontSize,
+          itemHeight: this.titleFontSize,
           itemGap: this.titleFontSize,
           textStyle: {
             fontSize: this.titleFontSize / 2

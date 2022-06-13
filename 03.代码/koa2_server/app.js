@@ -19,3 +19,7 @@ app.use(koa_response_data)
 app.listen(8888,()=>{
   console.log('koa服务器打开了')
 })
+
+const webSocketService = require('./service/web_socket_service')
+// 开启服务端监听，监听客户端连接
+webSocketService.listen()

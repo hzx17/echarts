@@ -1,0 +1,143 @@
+<template>
+  <div class="com-container">
+    <div class="com-chart" ref="map_ref" @dblclick="backMap"></div>
+  </div>
+</template>
+
+<script>
+import axios from 'axios'
+import { getProvinceMapInfo } from '../utils/map_utils'
+export default {
+  name: 'Map-echarts',
+  data () {
+    return {
+      chartsInstance: null, // echarts实例对象
+      allData: null, // 获取的所有数据
+      mapData: {}
+    }
+  },
+  methods: {
+    async initChart () {
+      this.chartsInstance = this.$echarts.init(this.$refs.map_ref, 'chalk')
+      // 获取地图数据，不属于后端数据，所以不能使用$http
+      const { data: ret } = await axios.get('http://localhost:8999/static/map/china.json')
+      // 注册地图
+      this.$echarts.registerMap('china', ret)
+      const initOption = {
+        title: {
+          text: '｜商家分布',
+          left: 20,
+          top: 20
+        },
+        geo: {
+          type: 'map',
+          map: 'china',
+          top: '5%',
+          bottom: '5%',
+          itemStyle: {
+            areaColor: '#2E72BF',
+            borderColor: '#333'
+          }
+        },
+        legend: {
+          left: '5%',
+          bottom: '5%',
+          orient: 'vertical'
+        }
+      }
+      this.chartsInstance.setOption(initOption)
+      this.chartsInstance.on('click', async arg => { // 点击地图，展示省份
+        const provinceInfo = getProvinceMapInfo(arg.name)
+        // 判断当前点击省份的地图mapData是否存在
+        if (!this.mapData[provinceInfo.key]) {
+          const { data: ret } = await axios.get('http://localhost:8999' + provinceInfo.path)
+          this.mapData[provinceInfo.key] = ret
+          this.$echarts.registerMap(provinceInfo.key, ret)
+        }
+        const changeOption = {
+          geo: {
+            map: provinceInfo.key
+          }
+        }
+        this.chartsInstance.setOption(changeOption)
+      })
+    },
+    /* 获取数据 */
+    async getData () {
+      const { data: ret } = await this.$http.get('/map')
+      this.allData = ret
+      this.updateChart() // 调用更新数据函数
+    },
+    updateChart () { // 更新数据
+      const legendArr = this.allData.map(item => {
+        return item.name
+      })
+      const seriesArr = this.allData.map(item => {
+        // 返回对象就代表一个类别下的所有散点数据
+        // 要在地图上显示散点数据，就要给图标增加一个配置，coordinateSystem: 'geo'
+        return {
+          type: 'effectScatter',
+          rippleEffect: {
+            scale: 5,
+            brushType: 'stroke'
+          },
+          name: item.name,
+          data: item.children,
+          coordinateSystem: 'geo'
+        }
+      })
+      const dataOption = {
+        legend: {
+          data: legendArr
+        },
+        series: seriesArr
+      }
+      this.chartsInstance.setOption(dataOption)
+    },
+    screenAdapter () { // 屏幕分辨率改变
+      const titleFontSize = this.$refs.map_ref.offsetWidth / 100 * 3.6
+      const adapterOption = {
+        title: {
+          textStyle: {
+            fontSize: titleFontSize
+          }
+        },
+        legend: {
+          itemWidth: titleFontSize / 2,
+          itemHeight: titleFontSize / 2,
+          itemGap: titleFontSize / 2,
+          textStyle: {
+            fontSize: this.titleFontSize / 2
+          }
+        }
+      }
+      this.chartsInstance.setOption(adapterOption)
+      this.chartsInstance.resize()
+    },
+    /* 双击返回中国地图 */
+    backMap () {
+      setTimeout(() => {
+        const revertOption = {
+          geo: {
+            map: 'china'
+          }
+        }
+        this.chartsInstance.setOption(revertOption)
+      }, 100)
+    }
+  },
+  mounted () {
+    this.initChart() // 调用初始化函数
+    this.getData() // 获取函数
+    this.screenAdapter() // 主动触发屏幕大小改变设置函数
+    window.addEventListener('resize', this.screenAdapter) // 监听屏幕容器大小改变
+  },
+  destroyed () {
+    window.removeEventListener('resize', this.screenAdapter) // 销毁时取消监听
+  }
+}
+</script>
+
+<style>
+
+</style>
