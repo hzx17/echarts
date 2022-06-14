@@ -87,9 +87,10 @@ export default {
       }
       this.chartsInstance.setOption(initOption)
     },
-    /* 获取数据 */
-    async getData () {
-      const { data: ret } = await this.$http.get('/trend')
+    /* 获取数据,ret为服务端发送个客户端的数据 */
+    async getData (ret) {
+      console.log(ret)
+      // const { data: ret } = await this.$http.get('/trend')
       this.allData = ret
       this.updateChart() // 调用更新数据函数
     },
@@ -145,11 +146,11 @@ export default {
       this.titleFontSize = this.$refs.trend_ref.offsetWidth / 100 * 3.6
       const adapterOption = {
         legend: {
-          itemWidth: this.titleFontSize,
-          itemHeight: this.titleFontSize,
-          itemGap: this.titleFontSize,
+          itemWidth: this.titleFontSize / 1.2,
+          itemHeight: this.titleFontSize / 1.2,
+          itemGap: this.titleFontSize / 1.2,
           textStyle: {
-            fontSize: this.titleFontSize / 2
+            fontSize: this.titleFontSize / 1.2
           }
         }
       }
@@ -158,7 +159,6 @@ export default {
     },
     /* 用户选择展示 */
     selectChart (currentType) {
-      console.log(11)
       this.choiceType = currentType
       this.updateChart()
       this.showChoice = false
@@ -166,12 +166,23 @@ export default {
   },
   mounted () {
     this.initChart() // 调用初始化函数
-    this.getData() // 获取函数
+    // this.getData() // 获取函数,使用websocket，就不用直接调用的方式，向服务端索要数据
+    this.$socket.send({
+      action: 'getData',
+      socketType: 'trendData',
+      chartName: 'trend',
+      value: ''
+    })
     this.screenAdapter() // 主动触发屏幕大小改变设置函数
     window.addEventListener('resize', this.screenAdapter) // 监听屏幕容器大小改变
   },
+  created () {
+    // 在组件完成之后，注册websocket回调函数，getData这个方法就成为回调函数，当客户端发送数据以后，这个回调就会调用
+    this.$socket.registerCallBack('trendData', this.getData)
+  },
   destroyed () {
     window.removeEventListener('resize', this.screenAdapter) // 销毁时取消监听
+    this.$socket.unRegisterCallBack('trendData', this.getData) // 销毁时，取消回调函数取消
   }
 }
 </script>

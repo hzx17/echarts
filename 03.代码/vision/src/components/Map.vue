@@ -63,8 +63,8 @@ export default {
       })
     },
     /* 获取数据 */
-    async getData () {
-      const { data: ret } = await this.$http.get('/map')
+    async getData (ret) {
+      // const { data: ret } = await this.$http.get('/map') // 使用websocket
       this.allData = ret
       this.updateChart() // 调用更新数据函数
     },
@@ -126,14 +126,26 @@ export default {
       }, 100)
     }
   },
+  created () {
+    // 在组件完成之后，注册websocket回调函数，getData这个方法就成为回调函数，当客户端发送数据以后，这个回调就会调用
+    this.$socket.registerCallBack('mapData', this.getData)
+  },
   mounted () {
     this.initChart() // 调用初始化函数
-    this.getData() // 获取函数
+    // this.getData() // 获取函数
+    // 获取函数,使用websocket，就不用直接调用的方式，向服务端索要数据
+    this.$socket.send({
+      action: 'getData',
+      socketType: 'mapData',
+      chartName: 'map',
+      value: ''
+    })
     this.screenAdapter() // 主动触发屏幕大小改变设置函数
     window.addEventListener('resize', this.screenAdapter) // 监听屏幕容器大小改变
   },
   destroyed () {
     window.removeEventListener('resize', this.screenAdapter) // 销毁时取消监听
+    this.$socket.unRegisterCallBack('mapData', this.getData) // 销毁时，取消回调函数取消
   }
 }
 </script>

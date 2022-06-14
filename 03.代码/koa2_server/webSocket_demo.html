@@ -36,7 +36,12 @@
       }
     }
     send.onclick = ()=> {
-        ws.send('hello fuwuduan')
+      ws.send(JSON.stringify({
+        action: 'getData',
+        socketType: 'trendData',
+        chartName: 'trend',
+        value: true
+      }))
     }
   </script>
 </body>

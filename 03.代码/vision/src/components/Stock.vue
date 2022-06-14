@@ -16,14 +16,25 @@ export default {
       timerId: null // 定时器的标识
     }
   },
+  created () {
+    // 在组件完成之后，注册websocket回调函数，getData这个方法就成为回调函数，当客户端发送数据以后，这个回调就会调用
+    this.$socket.registerCallBack('stockData', this.getData)
+  },
   mounted () {
     this.initChart()
-    this.getData()
+    // this.getData()
+    this.$socket.send({
+      action: 'getData',
+      socketType: 'stockData',
+      chartName: 'stock',
+      value: ''
+    })
     window.addEventListener('resize', this.screenAdapter)
     this.screenAdapter()
   },
   destroyed () {
     window.removeEventListener('resize', this.screenAdapter)
+    this.$socket.unRegisterCallBack('stockData', this.getData) // 销毁时，取消回调函数取消
     clearInterval(this.timerId)
   },
   methods: {
@@ -44,9 +55,9 @@ export default {
         this.startInterval()
       })
     },
-    async getData () {
+    async getData (ret) {
       // 获取服务器的数据, 对this.allData进行赋值之后, 调用updateChart方法更新图表
-      const { data: ret } = await this.$http.get('/stock')
+      // const { data: ret } = await this.$http.get('/stock')
       this.allData = ret
       console.log(this.allData)
       this.updateChart()
@@ -74,7 +85,6 @@ export default {
       const seriesArr = showData.map((item, index) => {
         return {
           type: 'pie',
-          radius: [110, 100],
           center: centerArr[index],
           hoverAnimation: false, // 关闭鼠标移入到饼图时的动画效果
           labelLine: {
@@ -86,7 +96,7 @@ export default {
           },
           data: [
             {
-              name: item.name + '\n' + item.sales,
+              name: item.name + '\n\n' + item.sales,
               value: item.sales,
               itemStyle: {
                 color: new this.$echarts.graphic.LinearGradient(0, 1, 0, 0, [
@@ -117,7 +127,7 @@ export default {
     },
     screenAdapter () {
       const titleFontSize = this.$refs.stock_ref.offsetWidth / 100 * 3.6
-      const innerRadius = titleFontSize * 2
+      const innerRadius = titleFontSize * 2.8
       const outterRadius = innerRadius * 1.125
       const adapterOption = {
         title: {
@@ -130,35 +140,35 @@ export default {
             type: 'pie',
             radius: [outterRadius, innerRadius],
             label: {
-              fontSize: titleFontSize / 2
+              fontSize: titleFontSize / 1.4
             }
           },
           {
             type: 'pie',
             radius: [outterRadius, innerRadius],
             label: {
-              fontSize: titleFontSize / 2
+              fontSize: titleFontSize / 1.4
             }
           },
           {
             type: 'pie',
             radius: [outterRadius, innerRadius],
             label: {
-              fontSize: titleFontSize / 2
+              fontSize: titleFontSize / 1.4
             }
           },
           {
             type: 'pie',
             radius: [outterRadius, innerRadius],
             label: {
-              fontSize: titleFontSize / 2
+              fontSize: titleFontSize / 1.4
             }
           },
           {
             type: 'pie',
             radius: [outterRadius, innerRadius],
             label: {
-              fontSize: titleFontSize / 2
+              fontSize: titleFontSize / 1.4
             }
           }
         ]

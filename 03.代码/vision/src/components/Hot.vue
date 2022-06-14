@@ -33,14 +33,25 @@ export default {
       }
     }
   },
+  created () {
+    // 在组件完成之后，注册websocket回调函数，getData这个方法就成为回调函数，当客户端发送数据以后，这个回调就会调用
+    this.$socket.registerCallBack('hotData', this.getData)
+  },
   mounted () {
     this.initChart()
-    this.getData()
+    // this.getData()
+    this.$socket.send({
+      action: 'getData',
+      socketType: 'hotData',
+      chartName: 'hotproduct',
+      value: ''
+    })
     window.addEventListener('resize', this.screenAdapter)
     this.screenAdapter()
   },
   destroyed () {
     window.removeEventListener('resize', this.screenAdapter)
+    this.$socket.unRegisterCallBack('hotData', this.getData) // 销毁时，取消回调函数取消
   },
   methods: {
     initChart () {
@@ -94,9 +105,9 @@ export default {
       }
       this.chartInstance.setOption(initOption)
     },
-    async getData () {
+    async getData (ret) {
       // 获取服务器的数据, 对this.allData进行赋值之后, 调用updateChart方法更新图表
-      const { data: ret } = await this.$http.get('/hotproduct')
+      // const { data: ret } = await this.$http.get('/hotproduct')
       this.allData = ret
       console.log(this.allData)
       this.updateChart()
@@ -134,11 +145,11 @@ export default {
           }
         },
         legend: {
-          itemWidth: this.titleFontSize / 2,
-          itemHeight: this.titleFontSize / 2,
-          itemGap: this.titleFontSize / 2,
+          itemWidth: this.titleFontSize / 1.2,
+          itemHeight: this.titleFontSize / 1.2,
+          itemGap: this.titleFontSize / 1.2,
           textStyle: {
-            fontSize: this.titleFontSize / 2
+            fontSize: this.titleFontSize / 1.2
           }
         },
         series: [

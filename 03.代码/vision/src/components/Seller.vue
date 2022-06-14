@@ -83,8 +83,8 @@ export default {
       })
     },
     // 获取服务器的数据
-    async getData () {
-      const { data: ret } = await this.$http.get('/seller')
+    async getData (ret) {
+      // const { data: ret } = await this.$http.get('/seller')
       this.allData = ret
       this.allData.sort((a, b) => {
         return a.value - b.value
@@ -153,15 +153,26 @@ export default {
       this.chartInstance.resize()
     }
   },
+  created () {
+    // 在组件完成之后，注册websocket回调函数，getData这个方法就成为回调函数，当客户端发送数据以后，这个回调就会调用
+    this.$socket.registerCallBack('sellerData', this.getData)
+  },
   mounted () {
     this.initChart() // 挂载完成之后，初始化echart
-    this.getData() // 获取数据
+    // this.getData() // 获取数据
+    this.$socket.send({
+      action: 'getData',
+      socketType: 'sellerData',
+      chartName: 'seller',
+      value: ''
+    })
     this.screenAdapter() // 主动检测屏幕分配率
     window.addEventListener('resize', this.screenAdapter) // 监听器
   },
   destroyed () {
     this.timerId = null // 销毁时取消掉定时器
     window.removeEventListener('resize', this.screenAdapter) // 销毁时取消掉监听器
+    this.$socket.unRegisterCallBack('sellerData', this.getData) // 销毁时，取消回调函数取消
   }
 }
 </script>

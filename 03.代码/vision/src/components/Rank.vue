@@ -17,14 +17,25 @@ export default {
       timerId: null // 定时器的标识
     }
   },
+  created () {
+    // 在组件完成之后，注册websocket回调函数，getData这个方法就成为回调函数，当客户端发送数据以后，这个回调就会调用
+    this.$socket.registerCallBack('rankData', this.getData)
+  },
   mounted () {
     this.initChart()
-    this.getData()
+    // this.getData()
+    this.$socket.send({
+      action: 'getData',
+      socketType: 'rankData',
+      chartName: 'rank',
+      value: ''
+    })
     window.addEventListener('resize', this.screenAdapter)
     this.screenAdapter()
   },
   destroyed () {
     window.removeEventListener('resize', this.screenAdapter)
+    this.$socket.unRegisterCallBack('rankData', this.getData) // 销毁时，取消回调函数取消
     clearInterval(this.timerId)
   },
   methods: {
@@ -66,9 +77,9 @@ export default {
         this.startInterval()
       })
     },
-    async getData () {
+    async getData (ret) {
       // 获取服务器的数据, 对this.allData进行赋值之后, 调用updateChart方法更新图表
-      const { data: ret } = await this.$http.get('/rank')
+      // const { data: ret } = await this.$http.get('/rank')
       this.allData = ret
       // 对allData里面的每一个元素进行排序, 从大到小进行
       this.allData.sort((a, b) => {
