@@ -1,16 +1,16 @@
 <template>
-  <div class="screen-container">
+  <div class="screen-container" :style="comStyle">
     <header class="screen-header">
       <div>
-        <img src="/static/img/header_border_dark.png" alt="">
+        <img :src="headerBorderSrc" alt="">
       </div>
       <span class="logo">
-        <img src="/static/img/logo_dark.png" alt="" />
+        <img :src="logoSrc" alt="" />
       </span>
       <span class="title">电商平台实时监控系统</span>
       <div class="title-right">
-        <img src="/static/img/qiehuan_dark.png" class="qiehuan" @click="handleChangeTheme">
-        <span class="datetime">2049-01-01 00:00:00</span>
+        <img :src="themeSrc" class="qiehuan" @click="handleChangeTheme">
+        <span class="datetime">{{time}}</span>
       </div>
     </header>
     <div class="screen-body">
@@ -80,6 +80,7 @@ import Seller from '@/components/Seller.vue'
 import Stock from '@/components/Stock.vue'
 import Trend from '@/components/Trend.vue'
 import { mapState } from 'vuex'
+import { getThemeValue } from '@/utils/theme_utils'
 export default {
   created () {
     // 注册接收到数据的回调函数
@@ -89,6 +90,11 @@ export default {
   destroyed () {
     this.$socket.unRegisterCallBack('fullScreen')
     this.$socket.unRegisterCallBack('themeChange')
+    clearInterval(this.timer) // 消除定时器
+  },
+  mounted () {
+    this.dateFormat() // 因为我们的定时器为5s，所以在挂载时先执行一次获取时间
+    this.dateShow() // 挂载时执行定时器，展示实时数据
   },
   data () {
     return {
@@ -100,7 +106,9 @@ export default {
         rank: false,
         hot: false,
         stock: false
-      }
+      },
+      time: '', // 显示实时时间
+      timer: null
     }
   },
   methods: {
@@ -144,6 +152,25 @@ export default {
     },
     recvThemeChange () {
       this.$store.commit('changeTheme')
+    },
+    dateShow () { // 定时器，定时执行获取时间函数，从而达到显示实时时间的作用
+      if (!this.timer) {
+        this.timer = setInterval(() => {
+          this.dateFormat()
+        }, 5000)
+      }
+    },
+    dateFormat () {
+      const date = new Date()
+      const arr = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+      const number = date.getDay()
+      const year = date.getFullYear()
+      const month = date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1
+      const day = date.getDate() < 10 ? '0' + date.getDate() : date.getDate()
+      const hours = date.getHours() < 10 ? '0' + date.getHours() : date.getHours()
+      const minutes = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()
+      const seconds = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds()
+      this.time = arr[number] + '»' + year + '-' + month + '-' + day + '»' + hours + ':' + minutes + ':' + seconds
     }
   },
   components: {
@@ -155,7 +182,22 @@ export default {
     Trend
   },
   computed: {
-    ...mapState(['theme'])
+    ...mapState(['theme']),
+    comStyle () { // 切换样式时，背景颜色的改变
+      return {
+        'background-color': getThemeValue(this.$store.state.theme).backgroudColor,
+        color: getThemeValue(this.$store.state.theme).titleColor
+      }
+    },
+    logoSrc () {
+      return '/static/img/' + getThemeValue(this.$store.state.theme).logoSrc
+    },
+    themeSrc () {
+      return '/static/img/' + getThemeValue(this.$store.state.theme).themeSrc
+    },
+    headerBorderSrc () {
+      return '/static/img/' + getThemeValue(this.$store.state.theme).headerBorderSrc
+    }
   }
 }
 </script>

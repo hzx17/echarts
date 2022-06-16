@@ -6,6 +6,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 export default {
   name: 'Stock-echarts',
   data () {
@@ -37,9 +38,20 @@ export default {
     this.$socket.unRegisterCallBack('stockData', this.getData) // 销毁时，取消回调函数取消
     clearInterval(this.timerId)
   },
+  watch: {
+    theme () {
+      this.chartInstance.dispose() // 当主题切换时，销毁当前图表
+      this.initChart() // 重新以最新的主题名称初始化图表对象
+      this.screenAdapter() // 完成图表的适配
+      this.updateChart() // 更新图表
+    }
+  },
+  computed: {
+    ...mapState(['theme'])
+  },
   methods: {
     initChart () {
-      this.chartInstance = this.$echarts.init(this.$refs.stock_ref, 'chalk')
+      this.chartInstance = this.$echarts.init(this.$refs.stock_ref, this.theme)
       const initOption = {
         title: {
           text: '▎库存和销量分析',
@@ -59,7 +71,6 @@ export default {
       // 获取服务器的数据, 对this.allData进行赋值之后, 调用updateChart方法更新图表
       // const { data: ret } = await this.$http.get('/stock')
       this.allData = ret
-      console.log(this.allData)
       this.updateChart()
       this.startInterval()
     },

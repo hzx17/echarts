@@ -9,6 +9,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+import { getThemeValue } from '@/utils/theme_utils'
 export default {
   name: 'Hot-echarts',
   data () {
@@ -17,6 +19,14 @@ export default {
       allData: null,
       currentIndex: 0, // 当前所展示出的一级分类数据
       titleFontSize: 0
+    }
+  },
+  watch: {
+    theme () {
+      this.chartInstance.dispose() // 当主题切换时，销毁当前图表
+      this.initChart() // 重新以最新的主题名称初始化图表对象
+      this.screenAdapter() // 完成图表的适配
+      this.updateChart() // 更新图表
     }
   },
   computed: {
@@ -29,9 +39,11 @@ export default {
     },
     comStyle () {
       return {
-        fontSize: this.titleFontSize + 'px'
+        fontSize: this.titleFontSize + 'px',
+        color: getThemeValue(this.theme).titleColor
       }
-    }
+    },
+    ...mapState(['theme'])
   },
   created () {
     // 在组件完成之后，注册websocket回调函数，getData这个方法就成为回调函数，当客户端发送数据以后，这个回调就会调用
@@ -55,7 +67,7 @@ export default {
   },
   methods: {
     initChart () {
-      this.chartInstance = this.$echarts.init(this.$refs.hot_ref, 'chalk')
+      this.chartInstance = this.$echarts.init(this.$refs.hot_ref, this.$store.state.theme)
       const initOption = {
         title: {
           text: '▎ 热销商品的占比',
@@ -69,7 +81,6 @@ export default {
         tooltip: {
           show: true,
           formatter: arg => {
-            // console.log(arg)
             const thirdCategory = arg.data.children
             // 计算出所有三级分类的数值总和
             let total = 0
@@ -109,7 +120,6 @@ export default {
       // 获取服务器的数据, 对this.allData进行赋值之后, 调用updateChart方法更新图表
       // const { data: ret } = await this.$http.get('/hotproduct')
       this.allData = ret
-      console.log(this.allData)
       this.updateChart()
     },
     updateChart () {

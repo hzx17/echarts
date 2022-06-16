@@ -12,11 +12,13 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+import { getThemeValue } from '@/utils/theme_utils'
 export default {
   name: 'Trend-echarts',
   data () {
     return {
-      chartsInstance: null, // echarts实例对象
+      chartInstance: null, // echarts实例对象
       allData: null, // 获取的所有数据
       showChoice: false,
       choiceType: 'map', // 默认显示的标题
@@ -45,7 +47,8 @@ export default {
     /* 标题公共大小 */
     comStyle () {
       return {
-        'font-size': this.titleFontSize + 'px'
+        'font-size': this.titleFontSize + 'px',
+        color: getThemeValue(this.theme).titleColor
       }
     },
     /* 标题向左偏移量 */
@@ -53,11 +56,12 @@ export default {
       return {
         'margin-left': this.titleFontSize + 'px'
       }
-    }
+    },
+    ...mapState(['theme'])
   },
   methods: {
     initChart () {
-      this.chartsInstance = this.$echarts.init(this.$refs.trend_ref, 'chalk')
+      this.chartInstance = this.$echarts.init(this.$refs.trend_ref, this.theme)
       const initOption = {
         xAxis: {
           type: 'category',
@@ -85,11 +89,10 @@ export default {
           type: 'line'
         }
       }
-      this.chartsInstance.setOption(initOption)
+      this.chartInstance.setOption(initOption)
     },
     /* 获取数据,ret为服务端发送个客户端的数据 */
     async getData (ret) {
-      console.log(ret)
       // const { data: ret } = await this.$http.get('/trend')
       this.allData = ret
       this.updateChart() // 调用更新数据函数
@@ -140,7 +143,7 @@ export default {
           data: legendArr
         }
       }
-      this.chartsInstance.setOption(dataOption)
+      this.chartInstance.setOption(dataOption)
     },
     screenAdapter () { // 屏幕分辨率改变
       this.titleFontSize = this.$refs.trend_ref.offsetWidth / 100 * 3.6
@@ -154,14 +157,22 @@ export default {
           }
         }
       }
-      this.chartsInstance.setOption(adapterOption)
-      this.chartsInstance.resize()
+      this.chartInstance.setOption(adapterOption)
+      this.chartInstance.resize()
     },
     /* 用户选择展示 */
     selectChart (currentType) {
       this.choiceType = currentType
       this.updateChart()
       this.showChoice = false
+    }
+  },
+  watch: {
+    theme () {
+      this.chartInstance.dispose() // 当主题切换时，销毁当前图表
+      this.initChart() // 重新以最新的主题名称初始化图表对象
+      this.screenAdapter() // 完成图表的适配
+      this.updateChart() // 更新图表
     }
   },
   mounted () {

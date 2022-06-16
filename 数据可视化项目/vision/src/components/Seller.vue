@@ -5,6 +5,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 export default {
   name: 'Seller-echarts',
   data () {
@@ -16,10 +17,18 @@ export default {
       timerId: null // 定时器函数
     }
   },
+  watch: {
+    theme () {
+      this.chartInstance.dispose() // 当主题切换时，销毁当前图表
+      this.initChart() // 重新以最新的主题名称初始化图表对象
+      this.screenAdapter() // 完成图表的适配
+      this.updateChart() // 更新图表
+    }
+  },
   methods: {
-    // 初始化echartsInstance对象
+    // 初始化echartInstance对象
     initChart () {
-      this.chartInstance = this.$echarts.init(this.$refs.seller_ref, 'chalk')
+      this.chartInstance = this.$echarts.init(this.$refs.seller_ref, this.theme)
       /* 对图表对象初始化配置控制 */
       const initOption = {
         title: {
@@ -152,6 +161,9 @@ export default {
       this.chartInstance.setOption(adapterOption)
       this.chartInstance.resize()
     }
+  },
+  computed: {
+    ...mapState(['theme'])
   },
   created () {
     // 在组件完成之后，注册websocket回调函数，getData这个方法就成为回调函数，当客户端发送数据以后，这个回调就会调用

@@ -6,19 +6,28 @@
 
 <script>
 import axios from 'axios'
+import { mapState } from 'vuex'
 import { getProvinceMapInfo } from '../utils/map_utils'
 export default {
   name: 'Map-echarts',
   data () {
     return {
-      chartsInstance: null, // echarts实例对象
+      chartsIntance: null, // echarts实例对象
       allData: null, // 获取的所有数据
       mapData: {}
     }
   },
+  watch: {
+    theme () {
+      this.chartInstance.dispose() // 当主题切换时，销毁当前图表
+      this.initChart() // 重新以最新的主题名称初始化图表对象
+      this.screenAdapter() // 完成图表的适配
+      this.updateChart() // 更新图表
+    }
+  },
   methods: {
     async initChart () {
-      this.chartsInstance = this.$echarts.init(this.$refs.map_ref, 'chalk')
+      this.chartInstance = this.$echarts.init(this.$refs.map_ref, this.theme)
       // 获取地图数据，不属于后端数据，所以不能使用$http
       const { data: ret } = await axios.get('http://localhost:8999/static/map/china.json')
       // 注册地图
@@ -45,8 +54,8 @@ export default {
           orient: 'vertical'
         }
       }
-      this.chartsInstance.setOption(initOption)
-      this.chartsInstance.on('click', async arg => { // 点击地图，展示省份
+      this.chartInstance.setOption(initOption)
+      this.chartInstance.on('click', async arg => { // 点击地图，展示省份
         const provinceInfo = getProvinceMapInfo(arg.name)
         // 判断当前点击省份的地图mapData是否存在
         if (!this.mapData[provinceInfo.key]) {
@@ -59,7 +68,7 @@ export default {
             map: provinceInfo.key
           }
         }
-        this.chartsInstance.setOption(changeOption)
+        this.chartInstance.setOption(changeOption)
       })
     },
     /* 获取数据 */
@@ -92,7 +101,7 @@ export default {
         },
         series: seriesArr
       }
-      this.chartsInstance.setOption(dataOption)
+      this.chartInstance.setOption(dataOption)
     },
     screenAdapter () { // 屏幕分辨率改变
       const titleFontSize = this.$refs.map_ref.offsetWidth / 100 * 3.6
@@ -111,8 +120,8 @@ export default {
           }
         }
       }
-      this.chartsInstance.setOption(adapterOption)
-      this.chartsInstance.resize()
+      this.chartInstance.setOption(adapterOption)
+      this.chartInstance.resize()
     },
     /* 双击返回中国地图 */
     backMap () {
@@ -122,9 +131,12 @@ export default {
             map: 'china'
           }
         }
-        this.chartsInstance.setOption(revertOption)
+        this.chartsIntance.setOption(revertOption)
       }, 100)
     }
+  },
+  computed: {
+    ...mapState(['theme'])
   },
   created () {
     // 在组件完成之后，注册websocket回调函数，getData这个方法就成为回调函数，当客户端发送数据以后，这个回调就会调用
