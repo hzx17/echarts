@@ -190,13 +190,13 @@ export default {
       }
     },
     logoSrc () {
-      return '/static/img/' + getThemeValue(this.$store.state.theme).logoSrc
+      return './static/img/' + getThemeValue(this.$store.state.theme).logoSrc
     },
     themeSrc () {
-      return '/static/img/' + getThemeValue(this.$store.state.theme).themeSrc
+      return './static/img/' + getThemeValue(this.$store.state.theme).themeSrc
     },
     headerBorderSrc () {
-      return '/static/img/' + getThemeValue(this.$store.state.theme).headerBorderSrc
+      return './static/img/' + getThemeValue(this.$store.state.theme).headerBorderSrc
     }
   }
 }

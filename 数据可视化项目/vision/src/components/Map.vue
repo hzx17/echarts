@@ -12,7 +12,7 @@ export default {
   name: 'Map-echarts',
   data () {
     return {
-      chartsIntance: null, // echarts实例对象
+      chartInstance: null, // echarts实例对象
       allData: null, // 获取的所有数据
       mapData: {}
     }
@@ -131,9 +131,27 @@ export default {
             map: 'china'
           }
         }
-        this.chartsIntance.setOption(revertOption)
+        this.chartInstance.setOption(revertOption)
       }, 100)
     }
+    // ajax (url) {
+    //   return new Promise((resolve, reject) => {
+    //     // 步骤1、创建异步对象
+    //     const xhttp = new XMLHttpRequest()
+    //     // 步骤2：设置请求的url参数、参数1是请求的类型、参数2是请求的地址
+    //     xhttp.open('get', url)
+    //     // 步骤3：发送请求
+    //     xhttp.send()
+    //     // 步骤4注册事件 onreadystatechange状态改变调用
+    //     xhttp.onload = function () {
+    //       if (this.status >= 200 && this.status < 400) {
+    //         resolve(this.response)
+    //       } else {
+    //         reject(new Error(this.statusText))
+    //       }
+    //     }
+    //   })
+    // }
   },
   computed: {
     ...mapState(['theme'])
