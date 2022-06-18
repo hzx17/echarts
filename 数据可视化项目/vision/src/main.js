@@ -9,7 +9,7 @@ import '@/assets/css/global.css'
 // 引入字体文件
 import '@/assets/font/iconfont.css'
 // 请求基准路径的配置
-axios.defaults.baseURL = 'http://127.0.0.1:8888/api'
+axios.defaults.baseURL = 'http://127.0.0.1:7777/api'
 SocketService.Instance.connect() // 完成服务端websocket连接
 // 挂载到原型，通过this.$socket就可以使用到socket_service.js中定义的方法
 Vue.prototype.$socket = SocketService.Instance

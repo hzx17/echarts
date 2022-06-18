@@ -16,7 +16,7 @@ app.use(koa_response_header)
 //绑定第三层中间件
 app.use(koa_response_data)
 
-app.listen(8888,()=>{
+app.listen(7777,()=>{
   console.log('koa服务器打开了')
 })
 
